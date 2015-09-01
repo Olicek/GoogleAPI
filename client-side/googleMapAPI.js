@@ -20,24 +20,24 @@ GoogleMap = function(element)
 	this.markersCluster = new Array();
 	this.URL = "";
 	this.allowColors = new Array('green', 'purple', 'yellow', 'blue', 'orange', 'red');
-	
+
 	this.init();
 };
 
 GoogleMap.prototype = {
-	
+
 	constructor: GoogleMap,
-	
+
 	init: function()
 	{
 		this.setProperties();
 		return this;
 	},
-	
+
 	setProperties: function()
 	{
 		var properties = JSON.parse(this.element.dataset.map);
-		
+
 		this.options.position = properties.position;
 		this.options.proportions = [properties.width, properties.height];
 		this.options.zoom = properties.zoom;
@@ -49,16 +49,16 @@ GoogleMap.prototype = {
 		this.options.waypoints = properties.waypoint;
 		this.basePath = this.element.dataset.basepath;
 		this.URL = this.element.dataset.markersfallback;
-		
+
 		return this;
 	},
-	
+
 	initialize: function()
 	{
 		var base = this;
-		
+
 		base.doBounds('init');
-		
+
 		var mapOptions = {
 			center: new google.maps.LatLng(base.options.position[0], base.options.position[1]),
 			zoom: base.options.zoom,
@@ -70,18 +70,18 @@ GoogleMap.prototype = {
 		base.map = new google.maps.Map(base.element, mapOptions);
 		base.map.setTilt(45);
 		base.loadMarkers();
-		
+
 		if (base.options.waypoints !== null)
 		{
 			base.drawDirections();
 		}
 	},
-	
+
 	loadMarkers: function()
 	{
 		var base = this;
 		this.clearMarkers();
-		
+
 		var request = new XMLHttpRequest();
 		request.open('GET', base.URL, true);
 
@@ -104,7 +104,7 @@ GoogleMap.prototype = {
 
 		request.send();
 	},
-	
+
 	drawDirections: function ()
 	{
 		var base = this;
@@ -129,13 +129,35 @@ GoogleMap.prototype = {
 		base.directionsDisplay = new google.maps.DirectionsRenderer();
 		base.directionsService = new google.maps.DirectionsService();
 		base.directionsDisplay.setMap(base.map);
-		var request = {
-			origin: new google.maps.LatLng(start.position[0], start.position[1]),
-			destination: new google.maps.LatLng(end.position[0], end.position[1]),
-			waypoints: waypoints,
-			optimizeWaypoints: true,
-			travelMode: google.maps.TravelMode[base.options.waypoints.travelmode]
-		};
+
+		if (start.position[0] === 'auto'){
+			if (navigator.geolocation) {
+		        navigator.geolocation.getCurrentPosition(position);
+		    }
+		} else {
+			request(start.position[0], start.position[1]);
+		}
+
+		function position(position){
+			request(position.coords.latitude, position.coords.longitude);
+		}
+
+		function request(startX, startY){
+			var request = {
+				origin: new google.maps.LatLng(startX, startY),
+				destination: new google.maps.LatLng(end.position[0], end.position[1]),
+				waypoints: waypoints,
+				optimizeWaypoints: true,
+				travelMode: google.maps.TravelMode[base.options.waypoints.travelmode]
+			};
+			request = merge_options(request, base.options.waypoints);
+			base.directionsService.route(request, function(response, status) {
+				if (status == google.maps.DirectionsStatus.OK) {
+					base.directionsDisplay.setDirections(response);
+					var route = response.routes[0];
+				}
+			});
+		}
 
 		function merge_options(obj1,obj2){
 			var obj3 = {};
@@ -162,50 +184,50 @@ GoogleMap.prototype = {
 			}
 		});
 	},
-	
+
 	insertMarkers: function(markers)
 	{
 		var base = this;
-		
+
 		markers.forEach(function(item, i){
 			var marker,
 			position = new google.maps.LatLng(markers[i]['position'][0], markers[i]['position'][1]);
 			base.doBounds('fill', position);
-			
+
 			marker = new google.maps.Marker({
 				position: position,
 				map: base.map,
 				title: (("title" in markers[i]) ? markers[i]['title'] : null)
 			});
-			
+
 			marker.setAnimation(base.doAdmination(item));
-			
+
 			base.doColor(item, marker);
-			
+
 			base.doIcon(item, marker);
-			
+
 			base.doMessage(item, marker);
-			
+
 			if (base.options.cluster)
 			{
 				base.markersCluster.push(marker);
 			}
 		});
-		
+
 		base.doBounds('fit');
-		
-		
+
+
 		if (base.options.cluster)
 		{
 			if (typeof MarkerClusterer != 'undefined') {
 				new MarkerClusterer(base.map, base.markersCluster);
-			} else 
+			} else
 			{
 				throw 'MarkerClusterer is not loaded! Please use markerclusterer.js from client-side folder';
 			}
 		}
 	},
-	
+
 	clearMarkers: function()
 	{
 		var base = this;
@@ -214,7 +236,7 @@ GoogleMap.prototype = {
 		}
 		base.markers.length = 0;
 	},
-	
+
 	doBounds: function(functionName, position)
 	{
 		var base = this;
@@ -237,7 +259,7 @@ GoogleMap.prototype = {
 			fn[functionName];
 		}
 	},
-	
+
 	doAdmination: function(marker)
 	{
 		var animation;
@@ -245,15 +267,15 @@ GoogleMap.prototype = {
 		{
 			animation = google.maps.Animation[marker.animation];
 		}
-		
+
 		return animation;
 	},
-	
+
 	doMessage: function(option, marker)
 	{
 		var base = this;
 		var infoWindow = new google.maps.InfoWindow();
-		// Allow each marker to have an info window    
+		// Allow each marker to have an info window
 		if (("message" in option))
 		{
 			google.maps.event.addListener(marker, 'click', function() {
@@ -268,23 +290,23 @@ GoogleMap.prototype = {
 			}
 		}
 	},
-	
+
 	doProportions: function()
 	{
 		this.element.style.width = this.options.proportions[0];
 		this.element.style.height = this.options.proportions[1];
 	},
-	
+
 	doColor: function(option, marker)
 	{
 		var base = this;
-		
+
 		if ("color" in option && base.allowColors.indexOf(option['color']) >= 0)
 		{
 			marker.setIcon('http://maps.google.com/mapfiles/ms/icons/'+option['color']+'-dot.png');
 		}
 	},
-	
+
 	doIcon: function(option, marker)
 	{
 		if ("icon" in option)
@@ -294,29 +316,29 @@ GoogleMap.prototype = {
 				var icon = {
 					url: host+this.basePath + '/' + option['icon']['url']
 				};
-				
+
 				if (option['icon']['size'] !== null) {
 					icon['size'] = new google.maps.Size(option['icon']['size'][0], option['icon']['size'][1]);
 				}
-				
+
 				if (option['icon']['anchor'] !== null) {
 					icon['size'] = new new google.maps.Point(option['icon']['anchor'][0], option['icon']['anchor'][1]);
 				}
-				
+
 				if (option['icon']['origin'] !== null) {
 					icon['size'] = new new google.maps.Point(option['icon']['orign'][0], option['icon']['origin'][1]);
 				}
-				
+
 			} else {
 				var icon = {
 					url: host+this.basePath + '/' + option['icon']
 				};
 			}
-			
+
 			marker.setIcon(icon);
 		}
 	},
-	
+
 	getKey: function()
 	{
 		return this.options.key;

@@ -61,13 +61,10 @@ class Markers extends \Nette\Object
 			throw new \InvalidArgumentException("Animation must be string or boolean, $animation (" .
 					gettype($animation) . ") was given");
 		}
-		if (!is_string($title) && $title != null)
-		{
-			throw new \InvalidArgumentException("Title must be string or null, $title (".gettype($title).") was given");
-		}
+
 		$this->markers[] = array(
 			'position' => $position,
-			'title' => $title,
+			'title' => (string)$title,
 			'animation' => $animation,
 			'visible' => true
 		);

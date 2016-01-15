@@ -70,6 +70,11 @@ class MapAPI extends Control
 	 * @var array
 	 */
 	private $direction = ['travelmode' => 'DRIVING'];
+
+	/**
+	 * @var array
+	 */
+	public $onMarkers = array();
 	
 	
 	/**
@@ -370,6 +375,14 @@ class MapAPI extends Control
 	 */
 	public function handleMarkers()
 	{
+
+		//Process callbacks
+		foreach($this->onMarkers AS $onMarker){
+			if(is_callable($onMarker)){
+				$onMarker($this);
+			}
+		}
+
 		$this->getPresenter()->sendResponse(new JsonResponse($this->markers));
 	}
 }

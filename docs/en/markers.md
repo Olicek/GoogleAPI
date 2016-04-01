@@ -73,6 +73,14 @@ Set [message](https://developers.google.com/maps/documentation/javascript/exampl
 
 > Message can contains HTML tags
 
+### setCustomField()
+
+```
+$markers->setCustomField($customField);
+```
+
+Set array of custom properties, which are accessible via JavaScript on `google.maps.Marker` object.
+
 ### isMarkerClusterer()
 
 ```

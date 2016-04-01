@@ -177,7 +177,8 @@ GoogleMap.prototype = {
 			marker = new google.maps.Marker({
 				position: position,
 				map: base.map,
-				title: (("title" in markers[i]) ? markers[i]['title'] : null)
+				title: (("title" in markers[i]) ? markers[i]['title'] : null),
+				customField: (("customField" in markers[i]) ? markers[i]['customField'] : null)
 			});
 
 			marker.setAnimation(base.doAdmination(item));

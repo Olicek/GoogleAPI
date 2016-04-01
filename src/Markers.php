@@ -138,6 +138,7 @@ class Markers extends Object
 	 * @param array $customField
 	 * @return $this
 	 * @throws LogicException
+	 * @throws InvalidArgumentException
 	 */
 	public function setCustomField($customField)
 	{

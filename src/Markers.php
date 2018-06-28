@@ -135,6 +135,28 @@ class Markers
 		return $this;
 	}
 
+	/**
+	 * @param array $customField
+	 * @return $this
+	 * @throws LogicException
+	 * @throws InvalidArgumentException
+	 */
+	public function setCustomField($customField)
+	{
+		if (!count($this->markers))
+		{
+			throw new LogicException("setCustomField must be called after addMarker()");
+		}
+		if (!is_array($customField))
+		{
+			throw new InvalidArgumentException("customField must be array, $customField (".gettype($customField).") was given");
+		}
+		end($this->markers);         // move the internal pointer to the end of the array
+		$key = key($this->markers);
+		$this->markers[$key]['customField'] = $customField;
+		return $this;
+	}
+
 
 	/**
 	 * @param bool $cluster
